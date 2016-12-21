@@ -4,6 +4,7 @@ import theano
 from theano.sandbox import cuda as s
 from matplotlib import pyplot as plt
 import progressbar
+import numpy as np
 
 def train_net():
     n_iter = 500000
@@ -14,29 +15,33 @@ def train_net():
 
     bar = progressbar.ProgressBar(max_value=n_iter)
 
-    batch = bm.get_batch()
+    batch, _ = bm.get_batch()
     middle = functions['middle_f'](batch)
     out = functions['out_f'](batch)
 
     for iteration in range(n_iter):
-        batch = bm.get_batch()
+        batch, _ = bm.get_batch()
         # print 'middle', middle
         loss = functions['loss_f'](batch)
 
-        bar.update(iteration)
-        if iteration % 100 == 0:
+        if iteration % 10:
+            bar.update(iteration)
+        if iteration % 1000 == 0:
             print '\r loss %.3f' % loss
 
-        if iteration % 10000 == 0:
-            bm.bs = 50000
-            batch = bm.get_batch()
+        if iteration % 1000 == 0:
+            bm.bs = 100000 - 10-1
+            batch, spikes = bm.get_batch()
             middle = functions['middle_f'](batch)
 
             xs = middle[:, 0]
             ys = middle[:, 1]
-            fig = plt.figure()
-            plt.scatter(xs, ys, alpha=0.3)
-            plt.savefig('./../data/Normalplot_%i.png' % iteration)
+            # ys = np.ones_like(xs)
+            fig, ax = plt.subplots()
+            ax.clear()
+            ax.scatter(xs, ys, c=spikes,  alpha=0.3)
+            fig.savefig('./../data/plots/2DAllNormalplot_%i.png' % iteration)
+            plt.close(fig)
             bm.bs = bs
 
 
@@ -52,5 +57,5 @@ def train_net():
 
 
 if __name__ == '__main__':
-    # s.use('gpu0')
+    s.use('gpu0')
     train_net()
