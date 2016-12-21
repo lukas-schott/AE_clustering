@@ -32,7 +32,7 @@ def net_fct(layers):
     L1 = las.regularization.regularize_layer_params(layers['de_03'], las.regularization.l1)
     loss = T.mean((l_out - l_in)**2) + L1 * 10 ** - 6
 
-    updates= las.updates.adam(loss, all_params)
+    updates= las.updates.nesterov_momentum(loss, all_params, 0.01)
     functions['loss_f'] = theano.function([layers['l_in_raw'].input_var], loss, updates=updates)
 
     # clustering
