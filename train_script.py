@@ -6,12 +6,18 @@ from matplotlib import pyplot as plt
 import progressbar
 import numpy as np
 from scipy import ndimage
+import argparse
+import os
+
+# set by argparse
+PLOTSUBDIR = None # Default: save directly into plots/
+LR = None # Default: 0.01
 
 def train_net():
     n_iter = 500000
     bs = 10
     layers = nets.AE_v0()
-    functions = nets.net_fct(layers)
+    functions = nets.net_fct(layers,LR=LR)
     bm = BatchMan(bs=bs)
 
     bar = progressbar.ProgressBar(max_value=n_iter)
@@ -32,7 +38,7 @@ def train_net():
             print 'loss %.3f' % loss
             loss = 0.0
 
-        if iteration % 5000 == 0:
+        if iteration % 10000 == 0:
             bm.bs = 100000 - 10-1
             batch, spikes = bm.get_batch(sorted=True)
             middle = functions['middle_f'](batch)
@@ -57,7 +63,8 @@ def train_net():
             # ax[1].scatter(xsm[spikes == 0], ysm[spikes == 0],  marker='^', alpha=0.3, c=(0, 0, 0))
             # ax[1].scatter(xsm[spikes == 1], ysm[spikes == 1],  marker='8', alpha=0.3, c=(0, 0.5, 0))
             # ax[1].scatter(xsm[spikes == 2], ysm[spikes == 2], marker='p', alpha=0.3, c=(1, 0, 0))
-            fig.savefig('./../data/plots/tDAllNormalPlot_%i.png' % iteration)
+            fig.savefig('./../data/plots/%s/tDAllNormalPlot_%i.png'\
+                        % (PLOTSUBDIR, iteration))
             plt.close(fig)
 
             # shift values for patterns before/after actual pattern
@@ -77,7 +84,8 @@ def train_net():
                                              shift+spikes.shape[0]]
               ax.scatter(xs, ys, alpha=0.3, c=active_spikes)
             fig.tight_layout()
-            fig.savefig('./../data/plots/2DAllShiftPlot_%i.png' % iteration)
+            fig.savefig('./../data/plots/%s/2DAllShiftPlot_%i.png'\
+                        % (PLOTSUBDIR, iteration))
             plt.close(fig)
  
             bm.bs = bs
@@ -95,4 +103,21 @@ def train_net():
 
 if __name__ == '__main__':
     s.use('gpu0')
+
+    parser = argparse.ArgumentParser(
+                description='Train an Auto-Encoder on neuron '+
+                            'spike patterns.')
+    parser.add_argument("--plotsubdir", 
+                        help="Save plots to subdirectory of plots/",
+                        type=str, default="")
+    parser.add_argument("--LR", 
+                        help="learning rate",
+                        type=float, default="0.01")
+    args = parser.parse_args()
+
+    PLOTSUBDIR = args.plotsubdir
+    LR = args.LR
+    if not os.path.isdir('./../data/plots/%s/' % PLOTSUBDIR):
+      os.mkdir('./../data/plots/%s/' % PLOTSUBDIR)
+
     train_net()

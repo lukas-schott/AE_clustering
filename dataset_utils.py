@@ -29,14 +29,17 @@ class BatchMan():
         return data, spikes
 
     def get_batch(self, sorted=False):
-        input_batch = np.empty((self.bs, self.batch_sequ_len * self.n_neurons), dtype=np.float32)
+        input_batch = np.empty((self.bs, self.batch_sequ_len * self.n_neurons),
+                               dtype=np.float32)
         if not sorted:
-            t_selections = np.random.choice(self.T_max - self.batch_sequ_len - 1, size=self.bs, replace=False)
+            t_selections = np.random.choice(self.T_max - self.batch_sequ_len - 1, 
+                                            size=self.bs, replace=False)
         else:
             t_selections = np.arange(self.T_max - self.batch_sequ_len - 1)
 
         for b in range(self.bs):
-            input_batch[b, :] = self.data[:, t_selections[b]:t_selections[b] + self.batch_sequ_len].flatten()
+            input_batch[b, :] = self.data[:, t_selections[b]:
+                                             t_selections[b] + self.batch_sequ_len].flatten()
         return input_batch, self.labels[t_selections]
 
 
